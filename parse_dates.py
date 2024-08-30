@@ -1,15 +1,11 @@
 #!C:\Users\User\Desktop\TACC\venv\Scripts\python.exe
-
+import re
 import pandas as pd
 # take the path of the excel as argument
 import sys
 file_path = sys.argv[1] if len(sys.argv) > 1 else 'April_2024_04_28-7-16-59.xlsx'
 
 
-def escape_special_characters(text):
-    # Escape special characters in the text
-    text = text.replace('"', "'")
-    return text
 
 def extract_data_from_excel(file_path):
     # Load the Excel file, skipping initial rows that don't contain the data table
@@ -52,11 +48,31 @@ with open('extracted_data.txt', 'w') as file:
         hours = row['Hours']
         date = row['Date']
         description = row['Title']
-        description = escape_special_characters(description)
+        description = description.replace('"', "").replace("'", "").replace("#","")
         work_item = row['Work Item']
-
+        print(f'Extracted data: {date}, {work_item}, {description}, {hours}')
+        # exit()
         file.write(f'    ["{date}", "{work_item}: {description}", {hours}], \n')
         
     file.write(']')
     file.close()
-print("Data extraction complete. Check the extracted_data.xlsx file.")
+print("Data extraction complete. Check the extracted_data.txt file.")
+# open file in notepad
+with open('tacc.ahk', 'r') as file:
+    # replace data in file with new data
+    data = file.read()
+    new_data = open('extracted_data.txt', 'r').read()
+    # add markers to the new data
+    new_data = ';;;DATA;;;\n' + new_data + '\n;;;END;;;'
+
+    # user regex to replace everything between ;;;DATA;;; and ;;;END;;;
+    data = re.sub(r';;;DATA;;;.*?;;;END;;;', new_data, data, flags=re.DOTALL)
+    # write new data to file
+    file = open('tacc.ahk', 'w')
+    file.write(data)
+    file.close()
+
+# load the ahk script
+import os
+os.system('tacc.ahk')
+exit()
